@@ -14,8 +14,23 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+
+// CORS setup
+const allowedOrigins = [
+  'https://teacher-student-wheat.vercel.app', // Production frontend
+  'http://localhost:5173'                     // Local frontend
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'your-frontend-domain.com' : 'https://teacher-student-wheat.vercel.app',
+  origin: function(origin, callback) {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 
@@ -37,6 +52,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/submissions', submissionRoutes);
+
+// Preflight logging (optional, useful for debugging CORS)
+app.options('*', (req, res) => {
+  console.log('Preflight request from:', req.headers.origin);
+  res.sendStatus(204);
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
