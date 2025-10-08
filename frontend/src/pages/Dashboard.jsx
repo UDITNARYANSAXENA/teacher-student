@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { assignmentAPI, submissionAPI } from '../utils/api';
-import { Plus, Calendar, Users, FileText, Clock, ArrowRight } from 'lucide-react';
+import { Plus, Calendar, Users, FileText, Clock, ArrowRight, TrendingUp, Award, Target, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -31,7 +32,6 @@ const Dashboard = () => {
         const submissionsResponse = await submissionAPI.getMySubmissions();
         setSubmissions(submissionsResponse.data.submissions);
 
-        // Calculate student stats
         const totalAssignments = assignmentsResponse.data.assignments.length;
         const submittedCount = submissionsResponse.data.submissions.length;
         const gradedCount = submissionsResponse.data.submissions.filter(
@@ -52,7 +52,6 @@ const Dashboard = () => {
           overdueAssignments: overdue,
         });
       } else {
-        // Teacher stats
         const totalAssignments = assignmentsResponse.data.assignments.length;
         setStats({
           totalAssignments,
@@ -62,13 +61,7 @@ const Dashboard = () => {
         });
       }
     } catch (error) {
-      toast.error('Failed to fetch dashboard data', {
-        style: {
-          background: '#fee2e2',
-          color: '#b91c1c',
-          border: '1px solid #b91c1c',
-        },
-      });
+      toast.error('Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
@@ -88,21 +81,66 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Zap className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }
 
+  const statCards = [
+    {
+      title: 'Total Assignments',
+      value: stats.totalAssignments,
+      icon: FileText,
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+    },
+    {
+      title: user.role === 'student' ? 'Pending Submissions' : 'Active Assignments',
+      value: stats.pendingSubmissions,
+      icon: Clock,
+      gradient: 'from-amber-500 to-orange-500',
+      bgGradient: 'from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20',
+      iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+      iconColor: 'text-amber-600 dark:text-amber-400',
+    },
+    {
+      title: user.role === 'student' ? 'Graded Submissions' : 'Total Students',
+      value: stats.gradedSubmissions,
+      icon: Award,
+      gradient: 'from-green-500 to-emerald-500',
+      bgGradient: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
+      iconBg: 'bg-green-100 dark:bg-green-900/30',
+      iconColor: 'text-green-600 dark:text-green-400',
+    },
+    {
+      title: 'Overdue',
+      value: stats.overdueAssignments,
+      icon: Target,
+      gradient: 'from-red-500 to-pink-500',
+      bgGradient: 'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
+      iconBg: 'bg-red-100 dark:bg-red-900/30',
+      iconColor: 'text-red-600 dark:text-red-400',
+    },
+  ];
+
   return (
-    <div className="space-y-8 p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="space-y-8 p-6 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fadeIn">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Welcome back, {user.name}!
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Welcome back, {user.name}! \ud83d\udc4b
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
             {user.role === 'student'
               ? 'Track your assignments and submissions'
               : 'Manage your assignments and grade submissions'}
@@ -112,9 +150,9 @@ const Dashboard = () => {
         {user.role === 'teacher' && (
           <Link
             to="/assignments/create"
-            className="flex items-center space-x-2 rounded-md bg-blue-600 dark:bg-blue-500 text-white px-4 py-2.5 font-medium hover:bg-blue-700 dark:hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+            className="group flex items-center space-x-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 font-medium hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
             <span>Create Assignment</span>
           </Link>
         )}
@@ -122,96 +160,59 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Assignments
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.totalAssignments}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-              <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {user.role === 'student' ? 'Pending Submissions' : 'Active Assignments'}
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.pendingSubmissions}
+        {statCards.map((stat, index) => (
+          <div
+            key={index}
+            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.bgGradient} p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-1 animate-slideUp`}
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 dark:bg-black/10 blur-2xl"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 ${stat.iconBg} rounded-xl shadow-lg transform transition-transform duration-300 hover:rotate-12`}>
+                  <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+                </div>
+                <div className={`text-3xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
+                  {stat.value}
+                </div>
+              </div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {stat.title}
               </p>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {user.role === 'student' ? 'Graded Submissions' : 'Total Students'}
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.gradedSubmissions}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-              <Calendar className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Overdue
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.overdueAssignments}
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Recent Assignments */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20 dark:border-gray-700/50 animate-fadeIn">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             Recent Assignments
           </h2>
           <Link
             to="/assignments"
-            className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium transition-colors"
+            className="group flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-purple-600 dark:hover:text-purple-400 font-medium transition-colors duration-300"
           >
             <span>View all</span>
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </div>
 
         {assignments.length === 0 ? (
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12">
+            <div className="relative inline-block">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
+              <FileText className="relative h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               No assignments found
             </p>
             {user.role === 'teacher' && (
               <Link
                 to="/assignments/create"
-                className="mt-4 inline-flex items-center space-x-2 rounded-md bg-blue-600 dark:bg-blue-500 text-white px-4 py-2.5 font-medium hover:bg-blue-700 dark:hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                className="inline-flex items-center space-x-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create your first assignment</span>
@@ -220,7 +221,7 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {assignments.slice(0, 5).map((assignment) => {
+            {assignments.slice(0, 5).map((assignment, index) => {
               const submission = submissions.find(
                 (s) => s.assignment._id === assignment._id
               );
@@ -229,49 +230,54 @@ const Dashboard = () => {
               return (
                 <div
                   key={assignment._id}
-                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="group relative overflow-hidden flex items-center justify-between p-5 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-slideUp"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-300"></div>
+                  
+                  <div className="relative flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
                         {assignment.title}
                       </h3>
                       {overdue && !submission && (
-                        <span className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full">
+                        <span className="px-3 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full font-medium animate-pulse">
                           Overdue
                         </span>
                       )}
                       {submission && (
                         <span
-                          className={`px-2 py-1 text-xs rounded-full ${
+                          className={`px-3 py-1 text-xs rounded-full font-medium ${
                             submission.status === 'graded'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                               : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
                           }`}
                         >
-                          {submission.status === 'graded' ? 'Graded' : 'Submitted'}
+                          {submission.status === 'graded' ? '\u2713 Graded' : '\u2713 Submitted'}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Due: {formatDate(assignment.dueDate)}
-                    </p>
-                    {submission && submission.grade !== undefined && (
-                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                        Grade: {submission.grade}/{assignment.maxMarks}
-                      </p>
-                    )}
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        Due: {formatDate(assignment.dueDate)}
+                      </span>
+                      {submission && submission.grade !== undefined && (
+                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
+                          <Award className="h-4 w-4" />
+                          Grade: {submission.grade}/{assignment.maxMarks}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Link
-                      to={`/assignments/${assignment._id}`}
-                      className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium text-sm transition-colors"
-                    >
-                      <span>View Details</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
+                  <Link
+                    to={`/assignments/${assignment._id}`}
+                    className="relative flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-purple-600 dark:hover:text-purple-400 font-medium text-sm transition-colors duration-300 group/link"
+                  >
+                    <span>View Details</span>
+                    <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform duration-300" />
+                  </Link>
                 </div>
               );
             })}
